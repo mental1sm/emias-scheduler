@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "run": "npx ts-node src/index.ts"
+    "run": "npx ts-node src/index.ts",
+    "daemon": "npx ts-node src/daemon/daemon.ts"
   },
   "dependencies": {
     "@types/axios": "^0.9.36",

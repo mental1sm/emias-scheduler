@@ -21,6 +21,6 @@ export class LdpRule {
     @Column()
     initTime: string;
 
-    @ManyToOne(() => User, (user) => user.rules)
+    @ManyToOne(() => User, (user) => user.rules, {lazy: true})
     user: User;
 }

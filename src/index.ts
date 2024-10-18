@@ -4,7 +4,7 @@ import {User} from "./entity/User";
 import {CreateRuleState, RegistrationState} from "./types/BotSteps";
 import {LdpRule} from "./entity/LdpRule";
 import {EmiasClient} from "./client/EmiasClient";
-import {ReferralsResponse, ReferralsResult} from "./types/Referrals";
+import {ReferralsResponse} from "./types/Referrals";
 
 const token = "8093829634:AAEoIC9A-t_S54u5GdMaJG2XLKHytK5oFyU";
 const whitelist = ['karsus'];
@@ -44,46 +44,56 @@ AppDataSource.initialize().then(async () => {
     const emiasClient = EmiasClient.instance();
 
     const findUserById = async (userId: number) => {
-        return userRepository.findOne({where: {id: userId}});
+        try {
+            return userRepository.findOne({where: {id: userId}});
+        } catch (e) {
+            console.log('Exception in user find!')
+            return null;
+        }
     }
 
     // Выбор направления
     const startRuleCreation = async (ctx: Context) => {
-        const chatId = ctx.chat!.id;
-        if (!ctx.from) return;
-        const user = await findUserById(ctx.from.id);
-        if (!user) return;
-        const response = await emiasClient.getReferrals(user);
-        cachedReferralsResult[chatId] = response.data;
+        try {
+            const chatId = ctx.chat!.id;
+            if (!ctx.from) return;
+            const user = await findUserById(ctx.from.id);
+            if (!user) return;
+            const response = await emiasClient.getReferrals(user);
+            cachedReferralsResult[chatId] = response.data;
 
-        let markup = {
-            reply_markup: {
-                inline_keyboard: [] as { text: string, callback_data: string }[][]
+            let markup = {
+                reply_markup: {
+                    inline_keyboard: [] as { text: string, callback_data: string }[][]
+                }
             }
+
+            response.data.result.map(r => {
+                if (r.toLdp) {
+                    const item = [
+                        {text: r.toLdp.ldpTypeName, callback_data: `ref_${r.id}`}
+                    ]
+                    markup.reply_markup.inline_keyboard.push(item)
+                }
+                if (r.toDoctor) {
+                    const item = [
+                        {text: r.toDoctor.specialityName, callback_data: `ref_${r.id}`}
+                    ]
+                    markup.reply_markup.inline_keyboard.push(item)
+                }
+            });
+            createRuleState[chatId] = CreateRuleState.AWAIT_REFERRAL;
+
+            await ctx.reply("Выберите направление", markup);
+        } catch (e) {
+            console.log('Ошибка в начале создания направления!')
+            await ctx.reply('Непредвиденная ошибка!')
         }
-
-        response.data.result.map(r => {
-          if (r.toLdp) {
-              const item = [
-                  {text: r.toLdp.ldpTypeName, callback_data: `ref_${r.id}`}
-              ]
-              markup.reply_markup.inline_keyboard.push(item)
-          }
-          if (r.toDoctor) {
-              const item = [
-                  {text: r.toDoctor.specialityName, callback_data: `ref_${r.id}`}
-              ]
-              markup.reply_markup.inline_keyboard.push(item)
-          }
-        });
-        createRuleState[chatId] = CreateRuleState.AWAIT_REFERRAL;
-
-        await ctx.reply("Выберите направление", markup);
     }
 
     bot.command('start', (ctx) => {
         if (!checkWhitelist(ctx)) return;
-        const msg = "Шаман пидорас ебать кстати. Все, можем продолжать. Напиши /reg"
+        const msg = "Шаман пидорас ебать кстати. Все, можем продолжать. Напиши /help"
     })
 
     bot.command('help', async (ctx) => {
@@ -105,10 +115,11 @@ AppDataSource.initialize().then(async () => {
         let msg = "Выберите действие";
 
         const user = await findUserById(ctx.from.id);
-        if (user) {
-           msg = `ОМС: ${user.oms}\nДата рождения: ${user.birthDate}`
+        if (!user) {
+            await ctx.reply('Вы не зарегистрированы', markup);
+            return;
         }
-
+        msg = `ОМС: ${user.oms}\nДата рождения: ${user.birthDate}`
         await ctx.reply(msg, markup);
     })
 
@@ -125,123 +136,132 @@ AppDataSource.initialize().then(async () => {
         ctx.reply("Введите полис ОМС без пробелов, все 16 цифр");
     }
 
-    const showRule = async (ctx: Context) => {
-        const chatId = ctx.chat!.id;
-        const userId = ctx.from!.id;
-        const user = await findUserById(userId);
-        if (!user) {
-            await ctx.reply('Вы не зарегистрированы!');
-            return;
-        }
+    const showRule = async (ctx: Context, edit?: boolean) => {
+        try {
+            const chatId = ctx.chat!.id;
+            const userId = ctx.from!.id;
+            const user = await findUserById(userId);
+            if (!user) {
+                await ctx.reply('Вы не зарегистрированы!');
+                return;
+            }
 
-        if (user.rules.length === 0) {
-            await ctx.reply('У вас нет правил для записей.')
-            return;
-        }
+            if (user.rules.length === 0) {
+                await ctx.reply('У вас нет правил для записей.')
+                return;
+            }
 
-        if (readRuleCounter[chatId] < 0) readRuleCounter[chatId] = 0;
-        if (readRuleCounter[chatId] >= user.rules.length) readRuleCounter[chatId] = user.rules.length - 1;
+            if (readRuleCounter[chatId] < 0) readRuleCounter[chatId] = 0;
+            if (readRuleCounter[chatId] >= user.rules.length) readRuleCounter[chatId] = user.rules.length - 1;
 
-        const currentIndex = readRuleCounter[chatId];
+            const currentIndex = readRuleCounter[chatId];
 
 
-        const rule = user.rules[currentIndex];
-        const msg = `
+            const rule = user.rules[currentIndex];
+            const msg = `
             Правило [${currentIndex + 1} из ${user.rules.length}]
             \nНаправление: ${rule.referralName}
             \nКритерий учреждения: ${rule.locationCriteria}
             \nВремя записи: ${rule.timeRange}
             \nВремя запуска скрипта: ${rule.initTime}`;
 
-        const markup = {
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {text: 'Назад', callback_data: 'next_rule_callback'},
-                        {text: 'Вперед', callback_data: 'back_rule_callback'}
-                    ],
-                    [
-                        {text: 'Удалить', callback_data: `delete_rule_${rule.id}`}
+            const markup = {
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {text: 'Назад', callback_data: 'next_rule_callback'},
+                            {text: 'Вперед', callback_data: 'back_rule_callback'}
+                        ],
+                        [
+                            {text: 'Удалить', callback_data: `delete_rule_${rule.id}`}
+                        ]
                     ]
-                ]
+                }
             }
-        }
+            await ctx.reply(msg, markup);
 
-        await ctx.reply(msg, markup);
+        } catch (e) {
+            console.log('Ошибка в просмотре правил!')
+            await ctx.reply('Непредвиденная ошибка!')
+        }
     }
 
     bot.on('callback_query', async (ctx) => {
-        // @ts-ignore
-        const callbackData: string = ctx.callbackQuery?.data;
-        const userId = ctx.from.id;
-        const chatId = ctx.chat!.id;
-        if (callbackData === 'reg_callback') {
-            await register(ctx);
-        }
-        if (callbackData === 'create_rule_callback') {
-            registrationState[chatId] = RegistrationState.NONE;
-            createRuleData[chatId] = {};
-            await startRuleCreation(ctx);
-        }
-        if (callbackData.includes('ref_')) {
-            if (!createRuleData[chatId]) return;
-            const referralId = callbackData.split('_')[1];
-            createRuleData[chatId].referralId = Number(referralId);
-            const referralResult = cachedReferralsResult[chatId].result.find(r => r.id === Number(referralId))!;
-            let referralName = '';
-            if (referralResult.toLdp) {
-                referralName = referralResult.toLdp.ldpTypeName;
+        try {
+            // @ts-ignore
+            const callbackData: string = ctx.callbackQuery?.data;
+            const userId = ctx.from.id;
+            const chatId = ctx.chat!.id;
+            if (callbackData === 'reg_callback') {
+                await register(ctx);
             }
-            else if (referralResult.toDoctor) {
-                referralName = referralResult.toDoctor.specialityName;
+            if (callbackData === 'create_rule_callback') {
+                registrationState[chatId] = RegistrationState.NONE;
+                createRuleData[chatId] = {};
+                await startRuleCreation(ctx);
             }
-            createRuleData[chatId].referralName = referralName;
+            if (callbackData.includes('ref_')) {
+                if (!createRuleData[chatId]) return;
+                const referralId = callbackData.split('_')[1];
+                createRuleData[chatId].referralId = Number(referralId);
+                const referralResult = cachedReferralsResult[chatId].result.find(r => r.id === Number(referralId))!;
+                let referralName = '';
+                if (referralResult.toLdp) {
+                    referralName = referralResult.toLdp.ldpTypeName;
+                }
+                else if (referralResult.toDoctor) {
+                    referralName = referralResult.toDoctor.specialityName;
+                }
+                createRuleData[chatId].referralName = referralName;
 
-            createRuleState[chatId] = CreateRuleState.AWAIT_LOCATION_CRITERIA;
-            await ctx.reply('Введите часть названия учреждения.\n\n' +
-                'Пример:' +
-                '\nОригинальное название: Москва, Измайловский проспект, д. 63' +
-                '\nОригинальное учреждение: ГБУЗ ГП 191 Ф 3 (ГП 182)' +
-                '\n\nВаш критерий: измайловс' +
-                '\nЛибо возможно: 191 Ф 3' +
-                '\n\nТо есть подстрока от адреса или названия. В примере с "191 Ф 3" очень важно сохранять пробелы и порядок, ' +
-                'а в первом примере не писать больше необходимого, чтобы избежать ошибок.'
-            )
-        }
-        if (callbackData === 'check_rule_callback') {
-            if (!readRuleCounter[chatId]) {
-                readRuleCounter[chatId] = 0;
+                createRuleState[chatId] = CreateRuleState.AWAIT_LOCATION_CRITERIA;
+                await ctx.reply('Введите часть названия учреждения.\n\n' +
+                    'Пример:' +
+                    '\nОригинальное название: Москва, Измайловский проспект, д. 63' +
+                    '\nОригинальное учреждение: ГБУЗ ГП 191 Ф 3 (ГП 182)' +
+                    '\n\nВаш критерий: измайловс' +
+                    '\nЛибо возможно: 191 Ф 3' +
+                    '\n\nТо есть подстрока от адреса или названия. В примере с "191 Ф 3" очень важно сохранять пробелы и порядок, ' +
+                    'а в первом примере не писать больше необходимого, чтобы избежать ошибок.'
+                )
+            }
+            if (callbackData === 'check_rule_callback') {
+                if (!readRuleCounter[chatId]) {
+                    readRuleCounter[chatId] = 0;
+                }
+
+                await showRule(ctx);
+
             }
 
-            await showRule(ctx);
-
-        }
-
-        if (callbackData === 'next_rule_callback') {
-            if (!readRuleCounter[chatId]) {
-                readRuleCounter[chatId] = 0;
+            if (callbackData === 'next_rule_callback') {
+                if (!readRuleCounter[chatId]) {
+                    readRuleCounter[chatId] = 0;
+                }
+                readRuleCounter[chatId]++;
+                await showRule(ctx);
             }
-            readRuleCounter[chatId]++;
-            await showRule(ctx);
-        }
 
-        if (callbackData === 'back_rule_callback') {
-            if (!readRuleCounter[chatId]) {
-                readRuleCounter[chatId] = 0;
+            if (callbackData === 'back_rule_callback') {
+                if (!readRuleCounter[chatId]) {
+                    readRuleCounter[chatId] = 0;
+                }
+                readRuleCounter[chatId]--;
+                await showRule(ctx);
             }
-            readRuleCounter[chatId]--;
-            await showRule(ctx);
-        }
 
-        if (callbackData.includes('delete_rule')) {
-            const ruleId = callbackData.split('_')[2];
-            const rule = await ruleRepository.findOne({where: {id: Number(ruleId)}});
-            if (rule) {
-                await ruleRepository.remove(rule);
-                await ctx.reply('Правило удалено!');
+            if (callbackData.includes('delete_rule')) {
+                const ruleId = callbackData.split('_')[2];
+                const rule = await ruleRepository.findOne({where: {id: Number(ruleId)}});
+                if (rule) {
+                    await ruleRepository.remove(rule);
+                    await ctx.reply('Правило удалено!');
+                }
             }
+        } catch (e) {
+            console.log('Ошибка в коллбеках кнопок!');
+            await ctx.reply('Непредвиденная ошибка!')
         }
-
     })
 
     bot.on('message', async (msg) => {
