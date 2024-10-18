@@ -41,8 +41,17 @@ export class Queue<T> {
 
     /**
      * Map прокси
+     * @param clb Коллбек
      */
     map(clb: (item: T) => T): T[] {
         return this.items.map(item => clb(item));
+    }
+
+    /**
+     * find прокси
+     * @param predicate Предикат
+     */
+    find(predicate: (item: T) => boolean) {
+        return this.items.find(item => predicate(item));
     }
 }

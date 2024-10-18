@@ -10,7 +10,7 @@ export type Result = {
     name:                    string;
     arType:                  number;
     specialityChangeAbility: boolean;
-    receptionType:           any[];
+    receptionType:           ReceptionType[];
     ldpType:                 LdpType[];
     samplingType:            any[];
     complexResource:         ComplexResource[];
@@ -18,6 +18,7 @@ export type Result = {
     replacement:             boolean;
     nondistrict:             boolean;
     availableByReferral:     boolean;
+    mainDoctor?:              MainDoctor;
 }
 
 export type ComplexResource = {
@@ -39,4 +40,21 @@ export type Room = {
 export type LdpType = {
     code: string;
     name: string;
+}
+
+export type MainDoctor = {
+    specialityName: string;
+    specialityId:   number;
+    firstName:      string;
+    lastName:       string;
+    secondName:     string;
+    mejiId:         number;
+    employeeId:     number;
+}
+
+export type ReceptionType = {
+    code?:    string;
+    name?:    string;
+    primary?: string;
+    home?:    string;
 }

@@ -1,3 +1,6 @@
+import {EmiasRule} from "../../entity/EmiasRule";
+import {RuleDaemon} from "../RuleDaemon";
+
 export function isTimeInInterval(interval: string, timestamp: string): boolean {
     // Разбираем интервал на начало и конец
     const [startTime, endTime] = interval.split('-').map(time => time.trim());
@@ -42,4 +45,32 @@ export function isTimeInInterval(interval: string, timestamp: string): boolean {
         // Если интервал перекрывает полночь (например, "22:00-02:00")
         return currentTotalMinutes >= startTotalMinutes || currentTotalMinutes <= endTotalMinutes;
     }
+}
+
+export function isTimeToRun(rule: EmiasRule) {
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+
+    // Получаем время запуска из правила
+    const [targetHours, targetMinutes] = rule.initTime.split(':').map(Number);
+
+    return  currentHours === targetHours && currentMinutes === targetMinutes
+}
+
+export function isTimeToStop(rule: EmiasRule) {
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+
+    const [targetHours, targetMinutes] = rule.stopTime.split(':').map(Number);
+
+    return currentHours === targetHours && currentMinutes === targetMinutes
+}
+
+export function intervalOfExecutedRuleElapsed(ruleDaemon: RuleDaemon) {
+    if (!ruleDaemon.lastExecution) return true;
+    const currentTime = new Date();
+    const elapsedTime = currentTime.getTime() - ruleDaemon.lastExecution.getTime();
+    return  elapsedTime >= ruleDaemon.executionIntervalMs;
 }

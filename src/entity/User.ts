@@ -1,20 +1,20 @@
 import {Column, Entity, OneToMany, PrimaryColumn} from "typeorm";
-import {LdpRule} from "./LdpRule";
+import {EmiasRule} from "./EmiasRule";
 
 @Entity()
 export class User {
-    @PrimaryColumn()
+    @PrimaryColumn({type: 'integer'})
     id: number;
 
-    @Column()
+    @Column({type: 'integer'})
     chatId: number;
 
-    @Column()
+    @Column({type: 'text'})
     oms: string;
 
-    @Column()
+    @Column({type: 'text'})
     birthDate: string;
 
-    @OneToMany(() => LdpRule, (rule) => rule.user, {eager: true})
-    rules: LdpRule[];
+    @OneToMany(() => EmiasRule, (rule) => rule.user, {eager: true})
+    rules: EmiasRule[];
 }
