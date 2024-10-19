@@ -2,12 +2,11 @@ import {User} from "../entity/User";
 import * as axios from "axios";
 import {ReferralsResponse} from "../types/Referrals";
 import {AvailableResourceResponse} from "../daemon/types/AvaliableResource";
-import {RuleMatch} from "../types/RuleMatch";
+import {RuleMatch} from "../daemon/types/RuleMatch";
 import {AvailableSchedule} from "../daemon/types/AvailableSchedule";
 import {AppointmentDto} from "../daemon/types/AppointmentDto";
 import {SpecialitiesResponse} from "../types/Specialities";
 import {EmiasRule} from "../entity/EmiasRule";
-import {RuleType} from "../types/BotSteps";
 
 interface Json {
     jsonrpc: string;

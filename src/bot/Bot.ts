@@ -8,6 +8,7 @@ import {RegisterChain} from "./RegisterChain";
 import {CreateRuleChain} from "./CreateRuleChain";
 import {ReferralsResponse} from "../types/Referrals";
 import {SpecialitiesResponse} from "../types/Specialities";
+import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 export class Bot {
 
@@ -79,7 +80,6 @@ export class Bot {
             msg = `ОМС: ${user.oms}\nДата рождения: ${user.birthDate}`
             await ctx.reply(msg, markup);
         })
-
 
         this.bot.on('callback_query', async (ctx: Context) => {
             try {
@@ -233,22 +233,20 @@ export class Bot {
 
         if (chain.type === RuleType.REFERRAL) {
             const markup = await this.findReferrals(chain);
-            await ctx.reply("Выберите направление", markup);
+            await ctx.editMessageReplyMarkup(markup);
         }
 
         if (chain.type === RuleType.DOC) {
             const markup = await this.findSpecialities(chain);
-            await ctx.reply("Выберите специалиста", markup);
+            await ctx.editMessageReplyMarkup(markup);
         }
     }
 
     private async findReferrals(createChain: CreateRuleChain<ReferralsResponse>) {
         const chain = this.createRuleState[createChain.user.chatId];
         if (!chain) return;
-        let markup = {
-            reply_markup: {
-                inline_keyboard: [] as { text: string, callback_data: string }[][]
-            }
+        let markup: InlineKeyboardMarkup = {
+            inline_keyboard: [] as { text: string, callback_data: string }[][]
         }
 
         const response = await this.emiasClient.getReferrals(chain.user);
@@ -257,13 +255,13 @@ export class Bot {
                 const item = [
                     {text: r.toLdp.ldpTypeName, callback_data: `ref_${r.id}`}
                 ]
-                markup.reply_markup.inline_keyboard.push(item)
+                markup.inline_keyboard.push(item)
             }
             if (r.toDoctor) {
                 const item = [
                     {text: r.toDoctor.specialityName, callback_data: `ref_${r.id}`}
                 ]
-                markup.reply_markup.inline_keyboard.push(item)
+                markup.inline_keyboard.push(item)
             }
         });
 
@@ -275,10 +273,8 @@ export class Bot {
     private async findSpecialities(createChain: CreateRuleChain<SpecialitiesResponse>) {
         const chain = this.createRuleState[createChain.user.chatId];
         if (!chain) return;
-        let markup = {
-            reply_markup: {
-                inline_keyboard: [] as { text: string, callback_data: string }[][]
-            }
+        let markup: InlineKeyboardMarkup = {
+            inline_keyboard: [] as { text: string, callback_data: string }[][]
         }
 
         const response = await this.emiasClient.getSpecialities(chain.user);
@@ -286,7 +282,7 @@ export class Bot {
             const item = [
                 {text: r.name, callback_data: `doc_${r.code}`}
             ]
-            markup.reply_markup.inline_keyboard.push(item)
+            markup.inline_keyboard.push(item)
         });
 
         chain.cachedResult = response.data;
@@ -323,20 +319,19 @@ export class Bot {
             \nВремя записи: ${rule.timeRange}
             \nВремя запуска скрипта: ${rule.initTime}`;
 
-            const markup = {
-                reply_markup: {
-                    inline_keyboard: [
-                        [
-                            {text: 'Назад', callback_data: 'back_rule_callback'},
-                            {text: 'Вперед', callback_data: 'next_rule_callback'}
-                        ],
-                        [
-                            {text: 'Удалить', callback_data: `delete_rule_${rule.id}`}
-                        ]
+            const markup: InlineKeyboardMarkup = {
+                inline_keyboard: [
+                    [
+                        {text: 'Назад', callback_data: 'back_rule_callback'},
+                        {text: 'Вперед', callback_data: 'next_rule_callback'}
+                    ],
+                    [
+                        {text: 'Удалить', callback_data: `delete_rule_${rule.id}`}
                     ]
-                }
+                ]
             }
-            await ctx.reply(msg, markup);
+            await ctx.editMessageText(msg);
+            await ctx.editMessageReplyMarkup(markup);
 
         } catch (e) {
             console.log('Ошибка в просмотре правил!')

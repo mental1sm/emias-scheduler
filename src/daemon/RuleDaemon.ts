@@ -1,7 +1,7 @@
 import { Repository } from "typeorm";
 import { EmiasRule } from "../entity/EmiasRule";
 import { EmiasClient } from "../client/EmiasClient";
-import { RuleMatch } from "../types/RuleMatch";
+import { RuleMatch } from "./types/RuleMatch";
 import { AppointmentDto } from "./types/AppointmentDto";
 import { User } from "../entity/User";
 import { isTimeInInterval } from "./util/time";

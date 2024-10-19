@@ -1,4 +1,4 @@
-import {RuleMatch} from "../../types/RuleMatch";
+import {RuleMatch} from "./RuleMatch";
 import {Slot} from "./AvailableSchedule";
 
 export type AppointmentDto = {

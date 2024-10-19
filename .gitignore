@@ -9,3 +9,5 @@ yarn-error.log*
 .pnp.js
 
 .vscode/*
+/*.sqlite
+/package-lock.json
