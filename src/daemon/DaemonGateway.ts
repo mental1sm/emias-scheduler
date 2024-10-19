@@ -8,6 +8,7 @@ export class DaemonGateway {
 
     // Очередь ожидания
     private waitingQueue: Queue<RuleDaemon> = new Queue();
+    private sleepingQueue: Queue<RuleDaemon> = new Queue();
     // Очередь исполнения
     private executingQueue: Queue<RuleDaemon> = new Queue();
     // Очередь выполненных правил
@@ -28,6 +29,7 @@ export class DaemonGateway {
         await this.checkWaitingRules();
         await this.executeRules();
         await this.processExecutedRules();
+        await this.processSleepingRules();
     }
 
     private async checkRulesFromDatabase() {
@@ -61,6 +63,7 @@ export class DaemonGateway {
             this.executingQueue.find(r => predicate(r))
             || this.executedQueue.find(r => predicate(r))
             || this.waitingQueue.find(r => predicate(r))
+            || this.sleepingQueue.find(r => predicate(r))
         );
     }
 
@@ -75,7 +78,6 @@ export class DaemonGateway {
             } else this.executingQueue.enqueue(rule);
         } catch (e) {
             console.log('Ошибка во время работы правила!')
-            console.log(e)
         } finally {
             this.executedQueue.enqueue(rule);
         }
@@ -90,8 +92,29 @@ export class DaemonGateway {
             }
             else if (!rule.succeed) {
                 console.log('Правило не было успешно исполнено. Отправка на повторный запуск.')
-                this.executingQueue.enqueue(rule);
+                this.sleepingQueue.enqueue(rule);
             }
+        }
+    }
+
+    async processSleepingRules() {
+        const temporaryQueue = new Queue<RuleDaemon>();
+
+        while (!this.sleepingQueue.isEmpty()) {
+            const ruleDaemon = this.sleepingQueue.dequeue()!;
+
+            // Проверяем, истёк ли интервал между последним выполнением и текущим моментом
+            if (intervalOfExecutedRuleElapsed(ruleDaemon)) {
+                this.executingQueue.enqueue(ruleDaemon);
+            } else {
+                // Если интервал не истёк, возвращаем в sleepingQueue
+                temporaryQueue.enqueue(ruleDaemon);
+            }
+        }
+
+        // Возвращаем оставшиеся правила обратно в `sleepingQueue`
+        while (!temporaryQueue.isEmpty()) {
+            this.sleepingQueue.enqueue(temporaryQueue.dequeue()!);
         }
     }
 }

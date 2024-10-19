@@ -64,7 +64,7 @@ export class RuleDaemon {
                 });
             });
         } catch (error) {
-            console.log('Ошибка при исследовании локаций!', error);
+            console.log('Ошибка при исследовании локаций!');
         }
     }
 
@@ -127,7 +127,6 @@ export class RuleDaemon {
                 });
             });
         });
-        console.log('3')
 
         return appointmentDtoList;
     }

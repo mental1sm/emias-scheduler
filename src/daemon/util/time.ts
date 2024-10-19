@@ -72,5 +72,5 @@ export function intervalOfExecutedRuleElapsed(ruleDaemon: RuleDaemon) {
     if (!ruleDaemon.lastExecution) return true;
     const currentTime = new Date();
     const elapsedTime = currentTime.getTime() - ruleDaemon.lastExecution.getTime();
-    return  elapsedTime >= ruleDaemon.executionIntervalMs;
+    return  elapsedTime >= (ruleDaemon.executionIntervalMs * 1000);
 }
