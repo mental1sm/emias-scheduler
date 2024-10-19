@@ -1,0 +1,12 @@
+[Unit]
+Description=Emias daemon
+After=network.target
+
+[Service]
+ExecStart=node /root/emias/daemon.js
+WorkingDirectory=/root/emias
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

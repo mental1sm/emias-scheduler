@@ -27,8 +27,17 @@ export class CreateRuleChain<T> {
             }
             case CreateRuleState.AWAIT_TIME_RANGE: {
                 this.rule.timeRange = ctx.text.trim();
+                this.state = CreateRuleState.AWAIT_START_DATE;
+                await ctx.reply("Введите дату, с которой нужно искать запись.\nФормат: 19.10.2024")
+                break;
+            }
+            case CreateRuleState.AWAIT_START_DATE: {
+                this.rule.wantedStartDate = ctx.text.trim();
                 this.state = CreateRuleState.AWAIT_INIT_TIME;
-                await ctx.reply("Введите время, с которого демон запустит задачу с этим правилом.\n\nПример:\n7:30")
+                await ctx.reply("Введите время, с которого демон запустит задачу с этим правилом." +
+                    "\nСимвол '$' означает круглосуточное правило, которое начнется сразу же и не закончится до успеха или удаления." +
+                    "\n\nПример:" +
+                    "\n7:30");
                 break;
             }
             case CreateRuleState.AWAIT_INIT_TIME: {

@@ -34,6 +34,12 @@ export class EmiasRule {
     @Column({type: 'integer', nullable: true})
     specialityId?: number;
 
+    @Column({type: 'text'})
+    wantedStartDate: string;
+
+    @Column({type: 'text', nullable: true})
+    status: string;
+
     @ManyToOne(() => User, (user) => user.rules, {lazy: true})
     user: User;
 }

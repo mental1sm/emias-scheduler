@@ -18,7 +18,7 @@ export type Result = {
     replacement:             boolean;
     nondistrict:             boolean;
     availableByReferral:     boolean;
-    mainDoctor?:              MainDoctor;
+    mainDoctor?:             MainDoctor;
 }
 
 export type ComplexResource = {

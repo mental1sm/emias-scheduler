@@ -3,6 +3,7 @@ import {Queue} from "./Queue";
 import {RuleDaemon} from "./RuleDaemon";
 import {EmiasRule} from "../entity/EmiasRule";
 import {intervalOfExecutedRuleElapsed, isTimeToRun, isTimeToStop} from "./util/time";
+import {Logger} from "./Logger";
 
 export class DaemonGateway {
 
@@ -16,7 +17,7 @@ export class DaemonGateway {
 
     private readonly ruleRepository: Repository<EmiasRule>;
 
-    constructor(private datasource: DataSource, private pollingIntervalMs: number) {
+    constructor(datasource: DataSource, private pollingIntervalMs: number) {
         this.ruleRepository = datasource.getRepository(EmiasRule);
     }
 
@@ -36,8 +37,9 @@ export class DaemonGateway {
         const rules = await this.ruleRepository.find();
         rules.forEach(rule => {
             if (!this.existsInQueues(rule)) {
-                console.log(`Запланировано новое правило на ${rule.initTime}!`)
+                Logger.log(`Запланировано новое правило на ${rule.initTime}!`)
                 const ruleDaemon = new RuleDaemon(this.ruleRepository, rule);
+                this.writeDirtyStatus(ruleDaemon, 'Запланировано');
                 this.waitingQueue.enqueue(ruleDaemon);
             }
         })
@@ -52,7 +54,10 @@ export class DaemonGateway {
 
         while (!temporaryQueue.isEmpty()) {
             const rule = temporaryQueue.dequeue()!;
-            if (isTimeToRun(rule.getRule())) this.executingQueue.enqueue(rule);
+            if (isTimeToRun(rule.getRule())) {
+                this.executingQueue.enqueue(rule);
+                await this.writeDirtyStatus(rule, 'Выполняется');
+            }
             else this.waitingQueue.enqueue(rule);
         }
     }
@@ -77,7 +82,7 @@ export class DaemonGateway {
                 await rule.execute();
             } else this.executingQueue.enqueue(rule);
         } catch (e) {
-            console.log('Ошибка во время работы правила!')
+            Logger.error('Ошибка во время работы правила!')
         } finally {
             this.executedQueue.enqueue(rule);
         }
@@ -87,11 +92,13 @@ export class DaemonGateway {
         while (!this.executedQueue.isEmpty()) {
             const rule = this.executedQueue.dequeue()!;
             if (!rule.succeed && isTimeToStop(rule.getRule())) {
-                console.log('Время правила вышло. Перевод в режим ожидания.')
+                Logger.log('Время правила вышло. Перевод в режим ожидания.')
+                await this.writeDirtyStatus(rule, 'Запланировано повторно');
                 this.waitingQueue.enqueue(rule);
             }
             else if (!rule.succeed) {
-                console.log('Правило не было успешно исполнено. Отправка на повторный запуск.')
+                Logger.log('Правило не было успешно исполнено. Отправка на повторный запуск.')
+                await this.writeDirtyStatus(rule, 'Выполняется');
                 this.sleepingQueue.enqueue(rule);
             }
         }
@@ -116,5 +123,12 @@ export class DaemonGateway {
         while (!temporaryQueue.isEmpty()) {
             this.sleepingQueue.enqueue(temporaryQueue.dequeue()!);
         }
+    }
+
+    async writeDirtyStatus(daemon: RuleDaemon, status: string) {
+        const rule = daemon.getRule();
+        try {
+            void this.ruleRepository.update(rule.id, {status: status})
+        } catch (e) {}
     }
 }

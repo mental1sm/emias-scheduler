@@ -2,6 +2,7 @@ import {User} from "../entity/User";
 import {EmiasRule} from "../entity/EmiasRule";
 import {DataSource} from "typeorm";
 import {DaemonGateway} from "./DaemonGateway";
+import {Logger} from "./Logger";
 
 
 const AppDataSource = new DataSource({
@@ -15,8 +16,8 @@ const AppDataSource = new DataSource({
 });
 
 AppDataSource.initialize().then(async (datasource) => {
+    Logger.log('Запуск демона...')
     const gateway = new DaemonGateway(datasource, 2000);
-    console.log("Запуск демона...")
     await gateway.bootstrap();
-    console.log("Демон запущен")
+    Logger.log('Демон запущен!')
 });

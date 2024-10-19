@@ -48,6 +48,7 @@ export function isTimeInInterval(interval: string, timestamp: string): boolean {
 }
 
 export function isTimeToRun(rule: EmiasRule) {
+    if (rule.initTime === '$') return true;
     const now = new Date();
     const currentHours = now.getHours();
     const currentMinutes = now.getMinutes();
@@ -59,6 +60,7 @@ export function isTimeToRun(rule: EmiasRule) {
 }
 
 export function isTimeToStop(rule: EmiasRule) {
+    if (rule.initTime === '$') return false;
     const now = new Date();
     const currentHours = now.getHours();
     const currentMinutes = now.getMinutes();

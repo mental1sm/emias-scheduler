@@ -1,0 +1,12 @@
+[Unit]
+Description=Emias bot
+After=network.target
+
+[Service]
+ExecStart=node /root/emias/bot.js
+WorkingDirectory=/root/emias
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
