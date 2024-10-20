@@ -14,6 +14,7 @@ export const Answers = {
             `\n\nНаправление: ${rule.targetName}` +
             `\n\nКритерий поиска: ${rule.criteria}` +
             `\n\nВремя записи: ${rule.timeRange}` +
+            `\nЖелаемая начальная дата: ${rule.wantedStartDate}` +
             `\nВремя запуска скрипта: ${rule.initTime}` +
             `\nВремя останова скрипта: ${rule.stopTime}` +
             `\n\nИнтервал: ${rule.pollInterval} секунд` +

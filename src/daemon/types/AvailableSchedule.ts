@@ -47,7 +47,7 @@ export type LdpType = {
 }
 
 export type ScheduleOfDay = {
-    date:           Date;
+    date:           string;
     scheduleBySlot: ScheduleBySlot[];
 }
 

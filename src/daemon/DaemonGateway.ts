@@ -42,6 +42,13 @@ export class DaemonGateway {
                 this.writeDirtyStatus(ruleDaemon, 'Запланировано');
                 this.waitingQueue.enqueue(ruleDaemon);
             }
+            if (rule.deletionFlag) {
+                const daemon = this.findInQueues(rule);
+                if (daemon) {
+                    daemon.succeed = true;
+                    this.ruleRepository.remove(daemon.getRule())
+                }
+            }
         })
     }
 
@@ -63,8 +70,12 @@ export class DaemonGateway {
     }
 
     private existsInQueues(rule: EmiasRule): boolean {
+        return !!(this.findInQueues(rule));
+    }
+
+    private findInQueues(rule: EmiasRule): RuleDaemon | undefined {
         const predicate = (r: RuleDaemon) => r.getRuleId() === rule.id;
-        return !!(
+        return (
             this.executingQueue.find(r => predicate(r))
             || this.executedQueue.find(r => predicate(r))
             || this.waitingQueue.find(r => predicate(r))
@@ -76,11 +87,8 @@ export class DaemonGateway {
         if (this.executingQueue.isEmpty()) return;
         const rule = this.executingQueue.dequeue()!;
         try {
-            // Равно ли время между текущим и предыдущим запуском нужному интервалу
-            if (intervalOfExecutedRuleElapsed(rule)) {
-                rule.lastExecution = new Date();
-                await rule.execute();
-            } else this.executingQueue.enqueue(rule);
+            rule.lastExecution = new Date();
+            await rule.execute();
         } catch (e) {
             Logger.error('Ошибка во время работы правила!')
         } finally {

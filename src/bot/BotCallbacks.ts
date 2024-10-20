@@ -114,8 +114,8 @@ export class BotCallbacks extends BotSharedFunc {
                     const ruleId = callbackData.split('_')[2];
                     const rule = await this.ruleRepository.findOne({where: {id: Number(ruleId)}});
                     if (rule) {
-                        await this.ruleRepository.remove(rule);
-                        await ctx.reply('Правило удалено!');
+                        await this.ruleRepository.update(rule.id, {deletionFlag: true})
+                        await ctx.reply('Запланировано удаление!');
                     }
                 }
             } catch (e) {

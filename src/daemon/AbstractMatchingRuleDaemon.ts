@@ -60,13 +60,14 @@ export abstract class AbstractMatchingRuleDaemon extends AbstractRuleDaemon {
         const response = await this.emiasClient.getTimeInfo(this.user, match, this.rule);
         const { scheduleOfDay } = response.data.result;
 
-        return scheduleOfDay.flatMap(schedule =>
-            schedule.scheduleBySlot.flatMap(scheduleBySlot =>
-                scheduleBySlot.slot
-                    .filter(slot => isTimeInInterval(this.rule.timeRange, slot.startTime.toString()))
-                    .map(slot => this.createAppointmentDto(match, slot))
-            )
-        );
+        return scheduleOfDay.filter(scheduleOfDay => this.isDateMatch(scheduleOfDay))
+            .flatMap(schedule =>
+                schedule.scheduleBySlot.flatMap(scheduleBySlot =>
+                    scheduleBySlot.slot
+                        .filter(slot => isTimeInInterval(this.rule.timeRange, slot.startTime.toString()))
+                        .map(slot => this.createAppointmentDto(match, slot))
+                )
+            );
     }
 
     /**

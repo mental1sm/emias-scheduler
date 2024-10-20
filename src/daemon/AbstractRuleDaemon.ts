@@ -1,6 +1,8 @@
 import {ComplexResource} from "./types/AvaliableResource";
 import {MainDoctor} from "./types/AvaliableResource";
 import {EmiasRule} from "../entity/EmiasRule";
+import {ScheduleOfDay} from "./types/AvailableSchedule";
+import {matchTime} from "./util/time";
 
 export abstract class AbstractRuleDaemon {
     protected constructor(protected rule: EmiasRule) {
@@ -24,5 +26,10 @@ export abstract class AbstractRuleDaemon {
         const locationCriteria = this.rule.criteria.toLowerCase();
         if (!doctor.lastName) return false;
         return doctor.lastName.toLowerCase().includes(locationCriteria.toLowerCase());
+    }
+
+    protected isDateMatch(schedule: ScheduleOfDay) {
+        if (!schedule.date) return false;
+        return matchTime(this.rule, schedule.date);
     }
 }

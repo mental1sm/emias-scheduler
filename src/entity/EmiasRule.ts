@@ -40,6 +40,9 @@ export class EmiasRule {
     @Column({type: 'text', nullable: true})
     status: string;
 
+    @Column({type: 'integer'})
+    deletionFlag: boolean;
+
     @ManyToOne(() => User, (user) => user.rules, {lazy: true})
     user: User;
 }

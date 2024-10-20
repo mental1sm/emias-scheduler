@@ -76,3 +76,11 @@ export function intervalOfExecutedRuleElapsed(ruleDaemon: RuleDaemon) {
     const elapsedTime = currentTime.getTime() - ruleDaemon.lastExecution.getTime();
     return  elapsedTime >= (ruleDaemon.executionIntervalMs * 1000);
 }
+
+export function matchTime(rule: EmiasRule, date: string) {
+    const [wantedDay, wantedMonth, wantedYear] = rule.wantedStartDate.split('.');
+    const [year, month, day] = date.split('-');
+    if (wantedYear > year) return true;
+    if (wantedMonth > month) return true;
+    return wantedDay >= day;
+}

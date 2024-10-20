@@ -14,6 +14,7 @@ export class CreateRuleChain<T> {
         this.state = CreateRuleState.AWAIT_REFERRAL;
         this.rule = new EmiasRule();
         this.rule.user = user;
+        this.rule.deletionFlag = false;
     }
 
     public async handleState(ctx: Context) {
