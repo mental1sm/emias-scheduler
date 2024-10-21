@@ -10,6 +10,7 @@ import {User} from "../entity/User";
 import {EmiasRule} from "../entity/EmiasRule";
 import {EmiasClient} from "../client/EmiasClient";
 import {Answers} from "./BotAnswers";
+import {Logger} from "../daemon/Logger";
 
 export class BotCallbacks extends BotSharedFunc {
     constructor(
@@ -119,9 +120,10 @@ export class BotCallbacks extends BotSharedFunc {
                     }
                 }
             } catch (e) {
-                console.log('Ошибка в коллбеках кнопок!');
+                Logger.error('Ошибка в коллбеках кнопок!');
                 await ctx.reply('Непредвиденная ошибка! Проверьте правильность полиса ОМС и даты рождения.')
             }
         });
+        Logger.log('Модуль коллбеков инициализирован');
     }
 }

@@ -7,6 +7,7 @@ import {BotSharedMemory} from "./BotSharedMemory";
 import {BotCommands} from "./BotCommands";
 import {BotCallbacks} from "./BotCallbacks";
 import {BotOnMessage} from "./BotOnMessage";
+import {Logger} from "../daemon/Logger";
 
 export class Bot {
     private emiasClient = EmiasClient.instance();
@@ -23,10 +24,10 @@ export class Bot {
     }
 
     async bootstrap() {
-        console.log('Бот запускается...');
+        Logger.log('Бот запускается...');
         await this.initBot();
         await this.bot.launch(() => {
-            console.log('Готово!');
+            Logger.log('Готово!');
         });
     }
 

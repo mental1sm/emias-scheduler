@@ -2,10 +2,11 @@ import {DataSource} from "typeorm";
 import {User} from "./entity/User";
 import {EmiasRule} from "./entity/EmiasRule";
 import {Bot} from "./bot/Bot";
+const path = require('path')
+const fs = require('fs')
 
+const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json')));
 
-const token = "8093829634:AAEoIC9A-t_S54u5GdMaJG2XLKHytK5oFyU";
-const whitelist = ['karsus'];
 
 const AppDataSource = new DataSource({
     type: "sqlite",
@@ -19,6 +20,6 @@ const AppDataSource = new DataSource({
 
 
 AppDataSource.initialize().then(async (dataSource) => {
-    const bot = new Bot(dataSource, whitelist, token);
+    const bot = new Bot(dataSource, config.whitelist, config.token);
     await bot.bootstrap();
 });

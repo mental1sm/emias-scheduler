@@ -1,5 +1,6 @@
 import {Context, Telegraf} from "telegraf";
 import {BotSharedMemory} from "./BotSharedMemory";
+import {Logger} from "../daemon/Logger";
 
 export class BotOnMessage {
     constructor(private memory: BotSharedMemory) {
@@ -20,5 +21,6 @@ export class BotOnMessage {
                 createRuleState[chatId].handleState(ctx);
             }
         });
+        Logger.log('Модуль сообщений инициализирован');
     }
 }

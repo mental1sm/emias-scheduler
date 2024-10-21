@@ -72,10 +72,6 @@ export class RuleDaemon extends AbstractMatchingRuleDaemon {
         } catch (error) {
             Logger.error('Ошибка при записи!');
         }
-        // console.log(appointmentDto);
-        // this.succeed = true;
-        // await this.removeRule();
-        // console.log("Запись прошла успешно.");
     }
 
     /**

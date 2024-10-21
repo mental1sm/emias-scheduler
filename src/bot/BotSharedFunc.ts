@@ -11,6 +11,7 @@ import {InlineKeyboardMarkup} from "telegraf/typings/core/types/typegram";
 import {SpecialitiesResponse} from "../types/Specialities";
 import {EmiasClient} from "../client/EmiasClient";
 import {Answers} from "./BotAnswers";
+import {Logger} from "../daemon/Logger";
 
 export abstract class BotSharedFunc {
 
@@ -22,6 +23,7 @@ export abstract class BotSharedFunc {
     ) {}
 
     protected checkWhitelist(ctx: Context): boolean {
+        if (this.memory.getWhiteList().includes('$')) return true;
         if (ctx.from === undefined) return false;
         if (!ctx.from.username) return false;
         return this.memory.getWhiteList().includes(ctx.from.username);
@@ -31,7 +33,7 @@ export abstract class BotSharedFunc {
         try {
             return this.userRepository.findOne({where: {id: userId}});
         } catch (e) {
-            console.log('Exception in user find!')
+            Logger.error('Exception in user find!')
             return null;
         }
     }

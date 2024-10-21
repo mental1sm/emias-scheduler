@@ -5,6 +5,7 @@ import {Repository} from "typeorm";
 import {User} from "../entity/User";
 import {EmiasRule} from "../entity/EmiasRule";
 import {EmiasClient} from "../client/EmiasClient";
+import {Logger} from "../daemon/Logger";
 
 export class BotCommands extends BotSharedFunc {
 
@@ -17,7 +18,7 @@ export class BotCommands extends BotSharedFunc {
     init(bot: Telegraf) {
         bot.command('start', async (ctx) => {
             if (!this.checkWhitelist(ctx)) return;
-            const msg = "Шаман пидорас ебать кстати. Все, можем продолжать. Напиши /help"
+            const msg = "Напиши /help для открытия меню";
             await ctx.reply(msg);
         })
 
@@ -40,5 +41,6 @@ export class BotCommands extends BotSharedFunc {
             msg = `ОМС: ${user.oms}\nДата рождения: ${user.birthDate}`
             await ctx.reply(msg, markup);
         })
+        Logger.log('Модуль команд инициализирован');
     }
 }
