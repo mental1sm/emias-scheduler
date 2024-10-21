@@ -78,9 +78,11 @@ export function intervalOfExecutedRuleElapsed(ruleDaemon: RuleDaemon) {
 }
 
 export function matchTime(rule: EmiasRule, date: string) {
-    const [wantedDay, wantedMonth, wantedYear] = rule.wantedStartDate.split('.');
-    const [year, month, day] = date.split('-');
-    if (wantedYear > year) return true;
-    if (wantedMonth > month) return true;
-    return wantedDay >= day;
+    const [wantedDay, wantedMonth, wantedYear] = rule.wantedStartDate.split('.').map(Number);
+    const [year, month, day] = date.split('-').map(Number);
+
+    const wantedDate = new Date(wantedYear, wantedMonth - 1, wantedDay);
+    const currentDate = new Date(year, month - 1, day);
+
+    return currentDate >= wantedDate;
 }

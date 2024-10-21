@@ -117,8 +117,6 @@ export class EmiasClient {
         if (rule.specialityId) json.params.specialityId = rule.specialityId.toString();
         if (rule.referralId) json.params.referralId = rule.referralId;
 
-        console.log(json)
-
         return axios.post<AvailableSchedule>(url, JSON.stringify(json), {
             headers: {
                 'Content-Type': 'application/json'
