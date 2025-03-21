@@ -27,14 +27,14 @@ scp -r ./** user@ip:/path
 На сервере перейти в папку, куда скопировали приложение
 Настроить файлы .service так, как удобно, чтобы все пути совпадали
  ```bash
- cp ./*.service /etc/systemd/system
+cp ./*.service /etc/systemd/system
  ```
  ```bash
- npm i sqlite3
+npm i sqlite3
  ```
- В config.json следовать шагам в разделе Config
+В config.json следовать шагам в разделе Config
 ```bash
- systemctl daemon-reload
+systemctl daemon-reload
 ```
 ```bash
 systemctl start emias-bot.service && systemctl start emias-daemon.service
