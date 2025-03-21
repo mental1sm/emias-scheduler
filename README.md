@@ -1,16 +1,18 @@
+# Внимание
+### На момент 2025 года не работает!
 ## Windows
 Установить node.js версии 18 или выше
 Распаковать dist, перейти в папку и запустить
 ```bash
-   npm i sqlite3
+npm i sqlite3
 ```
 В config.json следовать шагам в разделе Config
 ```bash
-   node bot.js
-   ```
+node bot.js
+```
 ```bash
-   node daemon.js
-   ```
+node daemon.js
+```
 
 ## Config
 В поле token требуется ввести токен telegram бота
@@ -20,22 +22,22 @@
 Установить на сервер node.js версии 18 или выше
 Распаковать dist и открыть терминал, перейти к dist
 ```bash
-   scp -r ./** user@ip:/path
-   ```
+scp -r ./** user@ip:/path
+```
 На сервере перейти в папку, куда скопировали приложение
 Настроить файлы .service так, как удобно, чтобы все пути совпадали
  ```bash
-    cp ./*.service /etc/systemd/system
+ cp ./*.service /etc/systemd/system
  ```
  ```bash
-    npm i sqlite3
+ npm i sqlite3
  ```
  В config.json следовать шагам в разделе Config
 ```bash
-    systemctl daemon-reload
+ systemctl daemon-reload
 ```
 ```bash
-     systemctl start emias-bot.service && systemctl start emias-daemon.service
+systemctl start emias-bot.service && systemctl start emias-daemon.service
 ```
 
 Если нужно перезагрузить с новым конфигом, то systemctl restart emias-bot.service
